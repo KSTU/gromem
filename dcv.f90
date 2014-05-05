@@ -525,7 +525,7 @@ program dcvmd
 								rz=MixSig(i,CheckType,k,ch)/r
 								rz=rz*rz
 								rz=rz*rz*rz
-								if(r<0.25) then
+								if(r<0.23) then
 									LJ=99999999999.0
 								else
 								!	LJ=4.0*MixEps(i,CheckType,k,ch)*(rz*rz-rz)	!&
@@ -955,7 +955,11 @@ program dcvmd
 	do i=1,SubNum
 		write(42,'(a10,i6)') SubName(i),NMolLiq(i)
 	enddo
-	write(42,'(a10,i6)') 'MEM', 2    !MemAtom
+	if (MemType==1) then
+		write(42,'(a10,i6)') 'MEM', Mem1HW*Mem1HW*Mem1Len*2    !MemAtom
+	else
+		write(42,'(a10,i6)') 'MEM', 2 
+	endif
 	close(42)
 	close(41)
 	
@@ -966,7 +970,7 @@ program dcvmd
 	write(45,'(a)') '[ System ]'
 	do i=1,SubNum
 		do j=1,NLiq(i)
-			write(45,'(i7,$)') TempInt
+			write(45,'(i8,a1,$)') TempInt,' '
 			if (mod(TempInt1,10)==0) then
 				write(45,'(a)') ' '
 			endif
@@ -975,7 +979,7 @@ program dcvmd
 		enddo
 	enddo
 	do i=1,MemAtom
-		write(45,'(i7,$)') TempInt
+		write(45,'(i8,a1,$)') TempInt,' '
 		if (mod(TempInt,10)==0) then
 			write(45,'(a)') ' '
 		endif
@@ -989,7 +993,7 @@ program dcvmd
 		TempInt1=1
 		write(45,'(3a)') '[',trim(adjustl(SubName(i))),' ]'
 		do j=1,NLiq(i)
-			write(45,'(i7,$)') TempInt
+			write(45,'(i8,a1,$)') TempInt,' '
 			if (mod(TempInt1,10)==0) then
 				write(45,'(a)') ' '
 			endif
@@ -1002,7 +1006,7 @@ program dcvmd
 	write(45,'(a)') '[ MEM ]'
 	TempInt1=1
 	do i=1,MemAtom
-		write(45,'(i7,$)') TempInt
+		write(45,'(i8,a1,$)') TempInt,' '
 		if (mod(TempInt,10)==0) then
 			write(45,'(a)') ' '
 		endif

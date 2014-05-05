@@ -349,7 +349,7 @@ program mainv5
 		open(23,file='start.sh')
 			write(23,'(a)') '#/bin/bash'
 			write(23,'(a)') 'rm test.trp'
-			write(23,'(a)') 'for n in {1..50}'
+			write(23,'(a)') 'for n in {1..1}'
 			write(23,'(a)') 'do'
 				write(23,'(a)') 'echo $n " step" '
 				write(23,'(a)') './dcvmd'
@@ -368,8 +368,8 @@ program mainv5
 				write(23,'(a)') 'rm test.cpt'
 				write(23,'(a)') "find -type f -name 'test.mdp' -print0 | xargs --null perl -pi -e &
 				&'s/integrator               = md/integrator               = steep/'"
-				write(23,'(a)') 'grompp -f test.mdp -c test.gro -n index.ndx -p test.top -o test -maxwarn 1 '
-				write(23,'(a)') 'mdrun -deffnm test'
+				write(23,'(a)') 'grompp -f test.mdp -c test.gro -n index.ndx -p test.top -o test'
+				write(23,'(a)') 'mdrun -deffnm test -pd'
 				write(23,'(a)') 'cp test.gro test1.gro'
 				write(23,'(a)') 'rm test.tpr'
 				write(23,'(a)') 'rm test.cpt'
@@ -382,8 +382,8 @@ program mainv5
 				write(23,'(a)') 'cp testnew.gro test.gro '
 				write(23,'(a)') "find -type f -name 'test.mdp' -print0 | xargs --null perl -pi -e &
 				&'s/integrator               = steep/integrator               = md/'"
-				write(23,'(a)') 'grompp -f test.mdp -c test.gro -n index.ndx -p test.top -o test -maxwarn 1 '
-				write(23,'(a)') 'mdrun -deffnm test'
+				write(23,'(a)') 'grompp -f test.mdp -c test.gro -n index.ndx -p test.top -o test '
+				write(23,'(a)') 'mdrun -deffnm test -pd'
 				write(23,'(a)') 'cp test.gro test2.gro '
 				write(23,'(a)') 'rm test.tpr'
 				write(23,'(a)') 'rm test.cpt'
@@ -392,11 +392,10 @@ program mainv5
 				write(23,'(a)') 'rm test.trr'
 				write(23,'(a)') 'rm test.xtc'
 				write(23,'(a)') 'rm test.cpt'
-				write(23,'(a)') './dcvcalc'
+				write(23,'(a)') './denscalc'
 				write(23,'(a)') 'rm \#*'
 !				write(23,)
 			write(23,'(a)') 'done'
-			
 		close(23)
 		CurTime=0.0
 		First=1
