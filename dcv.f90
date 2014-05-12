@@ -525,10 +525,10 @@ program dcvmd
 								rz=MixSig(i,CheckType,k,ch)/r
 								rz=rz*rz
 								rz=rz*rz*rz
-								if(r<0.23) then
-									LJ=99999999999.0
+								if(r<0.7*MixSig(i,CheckType,k,ch)) then
+									LJ=999999999.0
 								else
-								!	LJ=4.0*MixEps(i,CheckType,k,ch)*(rz*rz-rz)	!&
+									LJ=4.0*MixEps(i,CheckType,k,ch)*(rz*rz-rz)	!&
 								!&+MixCha(i,CheckType,k,ch)/r*167100.96
 								endif
 								!print *,r, LJ
@@ -542,7 +542,7 @@ program dcvmd
 		
 			Prob=exp(-DeltaEn/Temp)   !!*AkL(CheckType)     !log(AkL(CheckType)*BoxVol/float(SumInV1(CheckType)+1)))
 			!Prob=2.0
-			if (DeltaEn<AkL(1)) then
+			if (DeltaEn<AkL(i)) then
 				print *,step, ' Molecule type ', CheckType, ' number ', SumInV1(CheckType)+1, ' add to VOL 1'
 				!print*,'Prob ', AkL(1),'Delta En ', DeltaEn,log(AkL(CheckType)*BoxVol/(SumInV1(CheckType)+1))
 				SumInV1(CheckType)=SumInV1(CheckType)+1
@@ -838,7 +838,6 @@ program dcvmd
 		do j=1,SumInV1(i)
 			NMolLiq(i)=NMolLiq(i)+1
 			do k=1,SubAtomNum(i)
-				
 				TotalMol=TotalMol+1
 			enddo
 			NLiq(i)=NLiq(i)+1
@@ -846,7 +845,6 @@ program dcvmd
 		do j=1,SumOut(i)
 			NMolLiq(i)=NMolLiq(i)+1
 			do k=1,SubAtomNum(i)
-				
 				TotalMol=TotalMol+1
 			enddo
 			NLiq(i)=NLiq(i)+1
@@ -878,12 +876,12 @@ program dcvmd
 	do i=1,SubNum
 		if (SumInV1(i)/BoxVol*Sigma*Sigma*Sigma<0.98*ToRoLIq(i)) then
 			AkL(i)=AkL(i)*1.05
-		elseif (SumInV1(i)/BoxVol*Sigma*Sigma*Sigma>1.1*ToRoLIq(i)) then
+		elseif (SumInV1(i)/BoxVol*Sigma*Sigma*Sigma>1.02*ToRoLIq(i)) then
 			AkL(i)=AkL(i)*0.98
 		endif
-!		if (AkL(i)>10000.0) then
-!			AkL(i)=10000.0
-!		endif
+		if (AkL(i)>100000.0) then
+			AkL(i)=100000.0
+		endif
 	enddo
 	
 	TotalMol=0

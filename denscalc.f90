@@ -78,8 +78,10 @@ program dcvcalc
 	integer(4) First
 	real(8) DTime
 	
-	integer(4) Nslice
+	integer(4) Nslice,Nslice2,Nslice3
 	real(8),allocatable:: MolNumSl(:,:)
+	real(8),allocatable:: MolNumSl2(:,:)
+	real(8),allocatable:: MolNumSl3(:,:)
 	integer(4) hist
 	
 	real(8),allocatable:: InMem1(:),MemIn1(:),MemOut1(:)
@@ -283,10 +285,14 @@ program dcvcalc
 	
 	
 	Nslice=ceiling(TotBoxLen/0.1)
+	Nslice2=ceiling(TotBoxLen/0.2)
+	Nslice3=ceiling(TotBoxLen/0.3)
 	open(56,file='nslice.temp',access='append')
-		write(56,'(i10)') Nslice
+		write(56,'(3i10)') Nslice, Nslice2, Nslice3
 	close(56)
 	allocate(MolNumSl(SubNum+1,Nslice+1))
+	allocate(MolNumSl2(SubNum+1,Nslice2+1))
+	allocate(MolNumSl3(SubNum+1,Nslice3+1))
 	allocate(Vol1MolNum(SubNum+1))
 	allocate(Vol2MolNum(SubNum+1))
 	allocate(MemIn1(SubNum+1))
@@ -312,10 +318,34 @@ program dcvcalc
 			do j=1,Nslice
 				MolNumSl(i,j)=0.0
 			enddo
+			do j=1,Nslice2
+				MolNumSl2(i,j)=0.0
+			enddo
+			do j=1,Nslice3
+				MolNumSl3(i,j)=0.0
+			enddo
 		enddo
 		SampleNum=0
 		open(28,file='SlDens.out')
-			write(28,'(a)')  'r,(nm)       ntbef,(nm-3)       ntaf,(nm-3)'
+			write(28,'(a,$)')  'r,(nm)   '
+			do i=1,SubNum
+				write(28,'(6a,$)') 'n', trim(adjustl(SubFile(i))),'(nm-1)  ','n*', trim(adjustl(SubFile(i))), '  '
+			enddo
+			write(28,'(a)') ' '
+		close(28)
+		open(28,file='SlDens2.out')
+			write(28,'(a,$)')  'r,(nm)   '
+			do i=1,SubNum
+				write(28,'(6a,$)') 'n', trim(adjustl(SubFile(i))),'(nm-1)  ','n*', trim(adjustl(SubFile(i))), '  '
+			enddo
+			write(28,'(a)') ' '
+		close(28)
+		open(28,file='SlDens3.out')
+			write(28,'(a,$)')  'r,(nm)   '
+			do i=1,SubNum
+				write(28,'(6a,$)') 'n', trim(adjustl(SubFile(i))),'(nm-1)  ','n*', trim(adjustl(SubFile(i))), '  '
+			enddo
+			write(28,'(a)') ' '
 		close(28)
 		open(27,file='TimeDep.out')
 			write(27,'(a,$)') 'time,(ps)   '
@@ -352,7 +382,25 @@ program dcvcalc
 		close(27)
 	else
 		open(28,file='SlDens.out')
-			write(28,'(a)')  'r,(nm)       ntbef,(nm-3)       ntaf,(nm-3)'
+			write(28,'(a,$)')  'r,(nm)   '
+			do i=1,SubNum
+				write(28,'(6a,$)') 'n', trim(adjustl(SubFile(i))),'(nm-1)  ','n*', trim(adjustl(SubFile(i))), '  '
+			enddo
+			write(28,'(a)') ' '
+		close(28)
+		open(28,file='SlDens2.out')
+			write(28,'(a,$)')  'r,(nm)   '
+			do i=1,SubNum
+				write(28,'(6a,$)') 'n', trim(adjustl(SubFile(i))),'(nm-1)  ','n*', trim(adjustl(SubFile(i))), '  '
+			enddo
+			write(28,'(a)') ' '
+		close(28)
+		open(28,file='SlDens3.out')
+			write(28,'(a,$)')  'r,(nm)   '
+			do i=1,SubNum
+				write(28,'(6a,$)') 'n', trim(adjustl(SubFile(i))),'(nm-1)  ','n*', trim(adjustl(SubFile(i))), '  '
+			enddo
+			write(28,'(a)') ' '
 		close(28)
 		open(29,file='calc.temp')
 		
@@ -368,6 +416,12 @@ program dcvcalc
 			do j=1,Nslice
 				read(29,'(f20.5)')MolNumSl(i,j)
 			enddo
+			do j=1,Nslice2
+				read(29,'(f20.5)')MolNumSl2(i,j)
+			enddo
+			do j=1,Nslice3
+				read(29,'(f20.5)')MolNumSl3(i,j)
+			enddo
 			read(29,'(f20.5)') NearInVol(i)
 			read(29,'(f20.5)') NearOutVol(i)
 		enddo
@@ -380,6 +434,10 @@ program dcvcalc
 		do j=1,NLiq(i)
 			hist=ceiling(float(Nslice)*Vol2MolZ(i,j)/TotBoxLen)
 			MolNumSl(i,hist)=MolNumSl(i,hist)+1.0
+			hist=ceiling(float(Nslice2)*Vol2MolZ(i,j)/TotBoxLen)
+			MolNumSl2(i,hist)=MolNumSl2(i,hist)+1.0
+			hist=ceiling(float(Nslice3)*Vol2MolZ(i,j)/TotBoxLen)
+			MolNumSl3(i,hist)=MolNumSl3(i,hist)+1.0
 			if ((Vol1MolZ(i,j)>BoxL1).and.(Vol1MolZ(i,j)<BoxL2)) then
 				Vol1MolNum(i)=Vol1MolNum(i)+1.0
 			endif
@@ -420,6 +478,12 @@ program dcvcalc
 			do j=1,Nslice
 				write(34,'(f20.5)') MolNumSl(i,j)
 			enddo
+			do j=1,Nslice2
+				write(34,'(f20.5)') MolNumSl2(i,j)
+			enddo
+			do j=1,Nslice3
+				write(34,'(f20.5)') MolNumSl3(i,j)
+			enddo
 			write(34,'(f20.5)') NearInVol(i)
 			write(34,'(f20.5)') NearOutVol(i)
 		enddo
@@ -432,6 +496,26 @@ program dcvcalc
 			do j=1,SubNum
 				write(28,'(2f30.5,$)') MolNumSl(j,i)/(BoxH*BoxH*TotBoxLen/float(Nslice))/float(SampleNum),&
 				&MolNumSl(j,i)/(BoxH*BoxH*TotBoxLen/float(Nslice))*Sigma*Sigma*Sigma/float(SampleNum)
+			enddo
+			write(28,'(a)') ' '
+		enddo
+	close(28)
+	open(28,file='SlDens2.out',access='append')	!sl2
+		do i=1,Nslice2
+			write(28,'(f10.5,$)') TotBoxLen*float(i)/float(Nslice2)
+			do j=1,SubNum
+				write(28,'(2f30.5,$)') MolNumSl2(j,i)/(BoxH*BoxH*TotBoxLen/float(Nslice2))/float(SampleNum),&
+				&MolNumSl2(j,i)/(BoxH*BoxH*TotBoxLen/float(Nslice2))*Sigma*Sigma*Sigma/float(SampleNum)
+			enddo
+			write(28,'(a)') ' '
+		enddo
+	close(28)
+	open(28,file='SlDens3.out',access='append')	!sl3
+		do i=1,Nslice3
+			write(28,'(f10.5,$)') TotBoxLen*float(i)/float(Nslice3)
+			do j=1,SubNum
+				write(28,'(2f30.5,$)') MolNumSl3(j,i)/(BoxH*BoxH*TotBoxLen/float(Nslice3))/float(SampleNum),&
+				&MolNumSl3(j,i)/(BoxH*BoxH*TotBoxLen/float(Nslice3))*Sigma*Sigma*Sigma/float(SampleNum)
 			enddo
 			write(28,'(a)') ' '
 		enddo
