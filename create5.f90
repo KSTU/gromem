@@ -347,12 +347,12 @@ program mainv5
 		close(22)
 		
 		open(23,file='start.sh')
-			write(23,'(a)') '#/bin/bash'
+			write(23,'(a)') '#/bin/zsh'
 			write(23,'(a)') 'rm test.trp'
 			write(23,'(a)') 'for n in {1..1}'
 			write(23,'(a)') 'do'
 				write(23,'(a)') 'echo $n " step" '
-				write(23,'(a)') './dcvmd'
+				write(23,'(a)') 'dcvmd'
 				write(23,'(a)') 'rm test.gro'
 				write(23,'(a)') 'rm test.top'
 				write(23,'(a)') 'rm index.ndx'
@@ -378,7 +378,7 @@ program mainv5
 				write(23,'(a)') 'rm test.trr'
 				write(23,'(a)') 'rm test.xtc'
 				write(23,'(a)') 'rm test.cpt'
-				write(23,'(a)') './tempprog'
+				write(23,'(a)') 'tempprog'
 				write(23,'(a)') 'cp testnew.gro test.gro '
 				write(23,'(a)') "find -type f -name 'test.mdp' -print0 | xargs --null perl -pi -e &
 				&'s/integrator               = steep/integrator               = md/'"
@@ -392,7 +392,7 @@ program mainv5
 				write(23,'(a)') 'rm test.trr'
 				write(23,'(a)') 'rm test.xtc'
 				write(23,'(a)') 'rm test.cpt'
-				write(23,'(a)') './denscalc'
+				write(23,'(a)') 'denscalc'
 				write(23,'(a)') 'rm \#*'
 !				write(23,)
 			write(23,'(a)') 'done'
