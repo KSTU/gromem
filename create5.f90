@@ -368,8 +368,8 @@ program mainv5
 				write(23,'(a)') 'rm test.cpt'
 				write(23,'(a)') "find -type f -name 'test.mdp' -print0 | xargs --null perl -pi -e &
 				&'s/integrator               = md/integrator               = steep/'"
-				write(23,'(a)') 'grompp -f test.mdp -c test.gro -n index.ndx -p test.top -o test'
-				write(23,'(a)') 'mdrun -deffnm test -pd'
+				write(23,'(a)') 'mygrompp -f test.mdp -c test.gro -n index.ndx -p test.top -o test'
+				write(23,'(a)') 'mymdrun -deffnm test -pd'
 				write(23,'(a)') 'cp test.gro test1.gro'
 				write(23,'(a)') 'rm test.tpr'
 				write(23,'(a)') 'rm test.cpt'
@@ -382,8 +382,8 @@ program mainv5
 				write(23,'(a)') 'cp testnew.gro test.gro '
 				write(23,'(a)') "find -type f -name 'test.mdp' -print0 | xargs --null perl -pi -e &
 				&'s/integrator               = steep/integrator               = md/'"
-				write(23,'(a)') 'grompp -f test.mdp -c test.gro -n index.ndx -p test.top -o test '
-				write(23,'(a)') 'mdrun -deffnm test -pd'
+				write(23,'(a)') 'mygrompp -f test.mdp -c test.gro -n index.ndx -p test.top -o test '
+				write(23,'(a)') 'mymdrun -deffnm test -pd'
 				write(23,'(a)') 'cp test.gro test2.gro '
 				write(23,'(a)') 'rm test.tpr'
 				write(23,'(a)') 'rm test.cpt'
