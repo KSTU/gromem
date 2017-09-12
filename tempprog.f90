@@ -142,7 +142,7 @@ program tempprog
 		enddo
 		read(9,*) TempString
 		read(9,*) MemType
-		if (MemType==1) then
+!		if (MemType==1) then
 		read(9,*) TempString
 			read(9,*) Sigma
 			read(9,*) TempString
@@ -153,7 +153,7 @@ program tempprog
 			read(9,*) Mem1Len
 			read(9,*) TempString
 			read(9,*) RoL
-		endif
+!		endif
 		read(9,*) TempString
 		read(9,*) NStep
 		read(9,*) TempString

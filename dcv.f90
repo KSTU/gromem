@@ -231,7 +231,7 @@ program dcvmd
 		enddo
 		read(9,*) TempString
 		read(9,*) MemType
-		if (MemType==1) then
+!		if (MemType==1) then
 		read(9,*) TempString
 			read(9,*) Sigma
 			read(9,*) TempString
@@ -242,7 +242,7 @@ program dcvmd
 			read(9,*) Mem1Len
 			read(9,*) TempString
 			read(9,*) RoL
-		endif
+!		endif
 		read(9,*) TempString
 		read(9,*) NStep
 		print *, TempString, NStep
@@ -921,7 +921,7 @@ program dcvmd
 		enddo
 		write(9,'(a)') 'Initial Mem Type'
 		write(9,'(i6)') MemType
-		if (MemType==1) then
+!		if (MemType==1) then
 			write(9,'(a)') 'Sigma in GROMACS'
 			write(9,'(f10.5)') Sigma
 			write(9,'(a)') 'MEMcell len'
@@ -932,7 +932,7 @@ program dcvmd
 			write(9,'(i6)') Mem1Len
 			write(9,'(a)') 'Liq density'
 			write(9,'(f10.5)') RoL
-		endif
+!		endif
 		write(9,'(a)') 'NSteps'
 		write(9,'(i10)') NStep
 		write(9,'(a)') 'Temperature'
@@ -954,7 +954,11 @@ program dcvmd
 		write(42,'(a10,i6)') SubName(i),NMolLiq(i)
 	enddo
 	if (MemType==1) then
-		write(42,'(a10,i6)') 'MEM', Mem1HW*Mem1HW*Mem1Len*2    !MemAtom
+		write(42,'(a10,i6)') 'MEM', MemAtom !Mem1HW*Mem1HW*Mem1Len*2    !MemAtom
+	elseif (MemType==2) then
+		write(42,'(a10,i6)') 'MEM', MemAtom ! (Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1))*2    !MemAtom
+	elseif (MemType==3) then
+		write(42,'(a10,i6)') 'MEM', MemAtom !(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)*3)*2    !MemAtom
 	else
 		write(42,'(a10,i6)') 'MEM', 2 
 	endif

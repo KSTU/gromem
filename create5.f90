@@ -90,7 +90,7 @@ program mainv5
 		read(7,'(a)') TempString
 		read(7,*) MemType
 		print*, TempString, MemType 
-		if (MemType==1) then
+		!if (MemType==1) then
 			read(7,'(a)') TempString
 			read(7,*) Sigma
 			print *, TempString, Sigma
@@ -114,14 +114,14 @@ program mainv5
 			print*,TempString,Temp
 			read(7,'(a)') TempString
 			read(7,*) Dtime
-			if (SubNum>1) then
+			!if (SubNum>1) then
 				
-			endif
-		endif
+			!endif
+		!endif
 		close(7)
-		if (MemType==2) then
-			
-		endif
+!		if (MemType==2) then
+!			
+!		endif
 		
 		print*, 'main.in file DONE'
 		print*,'  '
@@ -199,11 +199,209 @@ program mainv5
 			enddo
 			print *, ' Randomization BoxArr DONE '
 		endif
+		!!!!!!!!!!!!!!!!!!!!!
+		if (MemType==2) then
+			BoxH=Mem1HW*Sigma*MemDelta
+			BoxW=Mem1HW*Sigma*MemDelta
+			MemLen=Mem1Len*Sigma*MemDelta
+			BoxLiqLen=3.0*BoxH
+			BoxGasLen=3.0*BoxLiqLen
+			BoxLiqVol=BoxH*BoxW*BoxLiqLen
+			NLiqTot=RoL*BoxLiqVol/Sigma/Sigma/Sigma
+			if (SubNum==1) then	!определение количества каждого из веществ
+				NLiq(1)=NLiqTot
+			else
+				TempInt=0
+				do i=1,SubNum-1
+					NLiq(i)=ceiling(NLiqTot*frac(i))
+					TempInt=TempInt+Nliq(i)
+				enddo
+				Nliq(SubNum)=NLiqTot-TempInt
+			endif
+			NAtomTot=0
+			do i=1,SubNum
+				NAtomTot=NAtomTot+InitAtom(i)*Nliq(i)
+			enddo
+			BoxPart=1
+			do while (BoxPart*BoxPart*BoxPart*3<NLiqTot)
+				BoxPart=BoxPart+1
+			enddo
+			print *, ' NLiqTot ', NLiqTot
+			allocate(MemX(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)))
+			allocate(MemY(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)))
+			allocate(MemZ(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)))
+			allocate(BoxArrX(BoxPart*BoxPart*BoxPart*3))
+			allocate(BoxArrY(BoxPart*BoxPart*BoxPart*3))
+			allocate(BoxArrZ(BoxPart*BoxPart*BoxPart*3))
+			allocate(BoxArrOpen(BoxPart*BoxPart*BoxPart*3))
+			do i=1,Mem1Len
+				do j=1,Mem1HW
+					do k=1,Mem1HW
+						MemX((i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(j)-0.5)*Sigma*MemDelta
+						MemY((i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(k)-0.5)*Sigma*MemDelta
+						MemZ((i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(i)-0.5)*Sigma*MemDelta
+					enddo
+				enddo
+			enddo
+			!добавляем центральный атом
+			do i=1,Mem1Len-1
+				do j=1,Mem1HW
+					do k=1,Mem1HW
+						MemX(Mem1HW*Mem1HW*Mem1Len+(i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(j))*Sigma*MemDelta
+						MemY(Mem1HW*Mem1HW*Mem1Len+(i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(k))*Sigma*MemDelta
+						MemZ(Mem1HW*Mem1HW*Mem1Len+(i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(i))*Sigma*MemDelta
+					enddo
+				enddo
+			enddo
+			print *, ' Mem Creation DONE'
+			do i=1,BoxPart*3
+				do j=1,BoxPart
+					do k=1,BoxPart
+						BoxArrX((i-1)*BoxPart*BoxPart+(j-1)*BoxPart+k)=(float(j)-0.5)*BoxH/float(BoxPart)
+						BoxArrY((i-1)*BoxPart*BoxPart+(j-1)*BoxPart+k)=(float(k)-0.5)*BoxW/float(BoxPart)
+						BoxArrZ((i-1)*BoxPart*BoxPart+(j-1)*BoxPart+k)=(float(i)-0.5)*BoxLiqLen/float(BoxPart*3)
+						BoxArrOpen((i-1)*BoxPart*BoxPart+(j-1)*BoxPart+k)=0
+					enddo
+				enddo
+			enddo
+			print *, ' BoxArr Creation DONE'
+			allocate(MolTypeNum(NLiqTot))
+			TempInt=0
+			do i=1,SubNum
+				do j=1,NLiq(i)
+					Pass=0
+					TempInt=TempInt+1
+					do while (Pass==0)
+						RandInt=ceiling(rand()*float(BoxPart*BoxPart*BoxPart*3))
+						if (BoxArrOpen(RandInt)==0) then
+							MolTypeNum(TempInt)=RandInt
+							BoxArrOpen(RandInt)=i
+							pass=1
+						endif
+					enddo
+				enddo
+			enddo
+			print *, ' Randomization BoxArr DONE '
+		endif
+		!!!!!!!!!!!!!!!!!!!!!
+
+		!!!!!!!!!!!!!!!!!!!!!
+		if (MemType==3) then
+			BoxH=Mem1HW*Sigma*MemDelta
+			BoxW=Mem1HW*Sigma*MemDelta
+			MemLen=Mem1Len*Sigma*MemDelta
+			BoxLiqLen=3.0*BoxH
+			BoxGasLen=3.0*BoxLiqLen
+			BoxLiqVol=BoxH*BoxW*BoxLiqLen
+			NLiqTot=RoL*BoxLiqVol/Sigma/Sigma/Sigma
+			if (SubNum==1) then	!определение количества каждого из веществ
+				NLiq(1)=NLiqTot
+			else
+				TempInt=0
+				do i=1,SubNum-1
+					NLiq(i)=ceiling(NLiqTot*frac(i))
+					TempInt=TempInt+Nliq(i)
+				enddo
+				Nliq(SubNum)=NLiqTot-TempInt
+			endif
+			NAtomTot=0
+			do i=1,SubNum
+				NAtomTot=NAtomTot+InitAtom(i)*Nliq(i)
+			enddo
+			BoxPart=1
+			do while (BoxPart*BoxPart*BoxPart*3<NLiqTot)
+				BoxPart=BoxPart+1
+			enddo
+			print *, ' NLiqTot ', NLiqTot
+			allocate(MemX(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)*3))
+			allocate(MemY(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)*3))
+			allocate(MemZ(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)*3))
+			allocate(BoxArrX(BoxPart*BoxPart*BoxPart*3))
+			allocate(BoxArrY(BoxPart*BoxPart*BoxPart*3))
+			allocate(BoxArrZ(BoxPart*BoxPart*BoxPart*3))
+			allocate(BoxArrOpen(BoxPart*BoxPart*BoxPart*3))
+			do i=1,Mem1Len
+				do j=1,Mem1HW
+					do k=1,Mem1HW
+						MemX((i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(j)-0.5)*Sigma*MemDelta
+						MemY((i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(k)-0.5)*Sigma*MemDelta
+						MemZ((i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(i)-0.5)*Sigma*MemDelta
+					enddo
+				enddo
+			enddo
+			!добавляем граненый атом
+			do i=1,Mem1Len-1
+				do j=1,Mem1HW
+					do k=1,Mem1HW
+						MemX(Mem1HW*Mem1HW*Mem1Len+(i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(j))*Sigma*MemDelta
+						MemY(Mem1HW*Mem1HW*Mem1Len+(i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(k))*Sigma*MemDelta
+						MemZ(Mem1HW*Mem1HW*Mem1Len+(i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(i)-0.5)*Sigma*MemDelta
+					enddo
+				enddo
+			enddo
+			do i=1,Mem1Len-1
+				do j=1,Mem1HW
+					do k=1,Mem1HW
+						MemX(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)+(i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(j))*Sigma*MemDelta
+						MemY(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)+(i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(k)-0.5)*Sigma*MemDelta
+						MemZ(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)+(i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(i))*Sigma*MemDelta
+					enddo
+				enddo
+			enddo
+			do i=1,Mem1Len-1
+				do j=1,Mem1HW
+					do k=1,Mem1HW
+						MemX(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)*2+(i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(j)-0.5)*Sigma*MemDelta
+						MemY(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)*2+(i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(k))*Sigma*MemDelta
+						MemZ(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)*2+(i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(i))*Sigma*MemDelta
+					enddo
+				enddo
+			enddo
+			print *, ' Mem Creation DONE'
+			do i=1,BoxPart*3
+				do j=1,BoxPart
+					do k=1,BoxPart
+						BoxArrX((i-1)*BoxPart*BoxPart+(j-1)*BoxPart+k)=(float(j)-0.5)*BoxH/float(BoxPart)
+						BoxArrY((i-1)*BoxPart*BoxPart+(j-1)*BoxPart+k)=(float(k)-0.5)*BoxW/float(BoxPart)
+						BoxArrZ((i-1)*BoxPart*BoxPart+(j-1)*BoxPart+k)=(float(i)-0.5)*BoxLiqLen/float(BoxPart*3)
+						BoxArrOpen((i-1)*BoxPart*BoxPart+(j-1)*BoxPart+k)=0
+					enddo
+				enddo
+			enddo
+			print *, ' BoxArr Creation DONE'
+			allocate(MolTypeNum(NLiqTot))
+			TempInt=0
+			do i=1,SubNum
+				do j=1,NLiq(i)
+					Pass=0
+					TempInt=TempInt+1
+					do while (Pass==0)
+						RandInt=ceiling(rand()*float(BoxPart*BoxPart*BoxPart*3))
+						if (BoxArrOpen(RandInt)==0) then
+							MolTypeNum(TempInt)=RandInt
+							BoxArrOpen(RandInt)=i
+							pass=1
+						endif
+					enddo
+				enddo
+			enddo
+			print *, ' Randomization BoxArr DONE '
+		endif
+		!!!!!!!!!!!!!!!!!!!!!
+
 		!generating GRO
 		print *, NLiqTot
 		open(20,file='test.gro')
 			write(20,'(a)') ' generated by memcreat v5'
-			write(20,'(i6)') NAtomTot+Mem1HW*Mem1HW*Mem1Len*2 !BoxPart*BoxPart*BoxPart*3+
+			if (MemType==1) then
+				write(20,'(i6)') NAtomTot+Mem1HW*Mem1HW*Mem1Len*2 !BoxPart*BoxPart*BoxPart*3+
+			endif
+			if (MemType==2) then
+				write(20,'(i6)') NAtomTot+(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1))*2 !BoxPart*BoxPart*BoxPart*3+
+			endif
+			if (MemType==3) then
+				write(20,'(i6)') NAtomTot+(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)*3)*2 !BoxPart*BoxPart*BoxPart*3+
+			endif
 			TempInt=1
 			do i=1,NLiqTot
 				do j=1,InitAtom(BoxArrOpen(MolTypeNum(i)))
@@ -230,20 +428,52 @@ program mainv5
 !					&0.0,0.0,0.0
 !					TempInt=TempInt+1
 !			enddo
-			do i=1,Mem1HW*Mem1HW*Mem1Len
-				write(20,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt, 'MEM', ' A',&
-				&TempInt,MemX(i), MemY(i),MemZ(i),&
-				&0.0,0.0,0.0
-				TempInt=TempInt+1
-			enddo
-			do i=1,Mem1HW*Mem1HW*Mem1Len
-				write(20,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt, 'MEM', ' A',&
-				&TempInt,&
-				&MemX(i),MemY(i),MemZ(i)+MemLen+BoxLiqLen,&
-				&0.0,0.0,0.0
-				TempInt=TempInt+1
-			enddo
-			write(20,'(3f20.5)') BoxH, BoxW, MemLen*2+BoxLiqLen+BoxGasLen
+			if (MemType==1) then
+				do i=1,Mem1HW*Mem1HW*Mem1Len
+					write(20,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt, 'MEM', ' A',&
+					&TempInt,MemX(i), MemY(i),MemZ(i),&
+					&0.0,0.0,0.0
+					TempInt=TempInt+1
+				enddo
+				do i=1,Mem1HW*Mem1HW*Mem1Len
+					write(20,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt, 'MEM', ' A',&
+					&TempInt,&
+					&MemX(i),MemY(i),MemZ(i)+MemLen+BoxLiqLen,&
+					&0.0,0.0,0.0
+					TempInt=TempInt+1
+				enddo
+			endif
+			if (MemType==2) then	!ОЦК
+				do i=1,Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)
+					write(20,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt, 'MEM', ' A',&
+					&TempInt,MemX(i), MemY(i),MemZ(i),&
+					&0.0,0.0,0.0
+					TempInt=TempInt+1
+				enddo
+				do i=1,Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)
+					write(20,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt, 'MEM', ' A',&
+					&TempInt,&
+					&MemX(i),MemY(i),MemZ(i)+MemLen+BoxLiqLen,&
+					&0.0,0.0,0.0
+					TempInt=TempInt+1
+				enddo
+			endif
+			if (MemType==3) then	!ОЦК
+				do i=1,Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)*3
+					write(20,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt, 'MEM', ' A',&
+					&TempInt,MemX(i), MemY(i),MemZ(i),&
+					&0.0,0.0,0.0
+					TempInt=TempInt+1
+				enddo
+				do i=1,Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)*3
+					write(20,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt, 'MEM', ' A',&
+					&TempInt,&
+					&MemX(i),MemY(i),MemZ(i)+MemLen+BoxLiqLen,&
+					&0.0,0.0,0.0
+					TempInt=TempInt+1
+				enddo
+			endif
+			write(20,'(f9.5,a,f9.5,a,f9.5)') BoxH,' ' , BoxW,' ', MemLen*2+BoxLiqLen+BoxGasLen
 		close(20)
 		!top files
 		open(21,file='test.top')
@@ -301,7 +531,15 @@ program mainv5
 			do i=1,SubNum
 				write(21,'(a,i6)') InitSubName(i,1), NLiq(i)
 			enddo
-			write(21,'(a,i6)') ' MEM  ', Mem1HW*Mem1HW*Mem1Len*2
+			if (MemType==1) then
+				write(21,'(a,i6)') ' MEM  ', Mem1HW*Mem1HW*Mem1Len*2
+			elseif (MemType==2) then
+				write(21,'(a,i6)') ' MEM  ', (Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1))*2
+			elseif (MemType==3) then
+				write(21,'(a,i6)') ' MEM  ', (Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)*3)*2
+			else
+				write(21,'(a,i6)') ' MEM  ', 2
+			endif
 		close(21)
 		
 		open(22,file='index.ndx')
@@ -334,13 +572,33 @@ program mainv5
 				write(22, '(a)') '  '
 			endif
 			write(22, '(a)') '[ MEM ]'
-			do i=1,Mem1HW*Mem1HW*Mem1Len*2
-				write(22,'(i5,$)') TempInt
-				if (mod(TempInt,10)==0) then
-					write(22,'(a)') '  '
-				endif
-				TempInt=TempInt+1
-			enddo
+			if (MemType==1) then
+				do i=1,Mem1HW*Mem1HW*Mem1Len*2
+					write(22,'(i5,$)') TempInt
+					if (mod(TempInt,10)==0) then
+						write(22,'(a)') '  '
+					endif
+					TempInt=TempInt+1
+				enddo
+			endif
+			if (MemType==2) then
+				do i=1,(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1))*2
+					write(22,'(i5,$)') TempInt
+					if (mod(TempInt,10)==0) then
+						write(22,'(a)') '  '
+					endif
+					TempInt=TempInt+1
+				enddo
+			endif
+			if (MemType==3) then
+				do i=1,(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)*3)*2
+					write(22,'(i5,$)') TempInt
+					if (mod(TempInt,10)==0) then
+						write(22,'(a)') '  '
+					endif
+					TempInt=TempInt+1
+				enddo
+			endif
 			if (mod(TempInt,10)/=0) then
 				write(22, '(a)') '  '
 			endif
