@@ -4,6 +4,7 @@ module GlobalVar
 	character(20) SysName
 	character(20) TempString
 	integer(4) TempInt
+	integer(4),allocatable:: MemMol(:)
 	character(3),allocatable:: MemName(:)
 	real(8),allocatable:: MemX(:)	!coordinates
 	real(8),allocatable:: MemY(:)
@@ -14,12 +15,12 @@ module GlobalVar
 	real(8) MemHX	!box lenght
 	real(8) MemHY
 	real(8) MemHZ
-	
+
 	real(8) ConVol1B	!control voloume 1 begin
 	real(8) ConVol1E	!end
-	real(8) ConVol2B	
+	real(8) ConVol2B
 	real(8) ConVol2E
-	
+
 	integer(4) SubNum
 	integer(4),allocatable:: InitNum(:,:)
 	integer(4),allocatable:: InitAtom(:)
@@ -38,7 +39,7 @@ end module
 program generate
 	use GlobalVar
 	implicit none
-	
+
 	MaxAtoms=20
 	print *, 'Program init'
 	call ReadMem()
@@ -46,13 +47,13 @@ program generate
 	ConVol1E=ConVol1B+MemHX
 	ConVol2B=MemHZ*2.0+MemHX*3.0+MemHX*3.0
 	ConVol2E=ConVol2B+MemHX*3.0
-	
+
 	call ReadMainIn()
 	call WriteMem()
 	call WriteTop()
 	call WriteScript()
 	call WriteTemp()
-	
+
 	print *, 'Program DONE'
 end program
 
@@ -60,10 +61,11 @@ subroutine ReadMem( )
 	use GlobalVar
 	implicit none
 	integer(4) i
-	
+
 	open(11,file='mem.gro')
 		read(11,*) SysName
 		read(11,*) MemN
+		allocate(MemMol(MemN))
 		allocate(MemName(MemN))
 		allocate(MemX(MemN))
 		allocate(MemY(MemN))
@@ -72,7 +74,7 @@ subroutine ReadMem( )
 		allocate(MemVY(MemN))
 		allocate(MemVZ(MemN))
 		do i=1,MemN
-			read(11,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt, TempString, MemName(i),&
+			read(11,'(i5,2a5,i5,3f8.3,3f8.4)') MemMol(i), TempString, MemName(i),&
 			&TempInt,&
 			&MemX(i),MemY(i),MemZ(i),&
 			&MemVX(i),MemVY(i),MemVZ(i)
@@ -88,7 +90,7 @@ subroutine WriteMem()
 	integer(4) i,j
 	integer(4) SumAtomsOf2
 	integer(4) tempi
-	
+
 	SumAtomsOf2=0
 	do i=1,SubNum
 		do j=1,InitAtom(i)
@@ -102,8 +104,8 @@ subroutine WriteMem()
 		write(21,'(i5)') MemN*2+SumAtomsOf2
 		do i=1,SubNum
 			do j=1,InitAtom(i)
-				write(21,'(i5,2a5,i5,3f8.3,3f8.4)') tempi, InitSubName(i,j), InitAtomName(i,j),&
-				&j,&
+				write(21,'(i5,2a5,i5,3f8.3,3f8.4)') i, InitSubName(i,j), InitAtomName(i,j),&
+				&tempi,&
 				&InitX(i,j),InitY(i,j),InitZ(i,j)+MemHZ+MemHX*(1.0+float(i)/10.0),&
 				&0.0,0.0,0.0
 				tempi=tempi+1
@@ -111,16 +113,16 @@ subroutine WriteMem()
 		enddo
 		do i=1,2
 			do j=1,MemN
-				write(21,'(i5,2a5,i5,3f8.3,3f8.4)') tempi, 'MEM', MemName(j),&
-			&(i-1)*MemN+j,&
+				write(21,'(i5,2a5,i5,3f8.3,3f8.4)') MemMol(j)+2+MemMol(MemN)*(i-1), 'MEM', MemName(j),&
+			&tempi,&
 			&MemX(j),MemY(j),MemZ(j)+float(i-1)*(MemHZ+3.0*MemHX),&
 			&0.0,0.0,0.0
 			tempi=tempi+1
 			enddo
 		enddo
-		write(21,*) MemHX, MemHX, MemHZ*2.0*MemHX*(3.0+9.0)
+		write(21,*) MemHX, MemHX, MemHZ*2.0+MemHX*(3.0+9.0)
 	close(21)
-	
+
 	print *, 'Write gro file DONE'
 end subroutine
 
@@ -130,15 +132,15 @@ subroutine WriteTop()
 	integer(4) i,j
 	real(8) ChSi,ChC2,ChO
 	real(8) MassSi,MassC2,MassO
-	
+
 	ChSi=0.9
 	ChC2=-0.225
 	ChO=-0.45
-	
+
 	MassSi=28.0
 	MassC2=14.0
 	MassO=16
-	
+
 	open(21,file='test.top')
 		write(21,'(a)') ' [ defaults ] '
 		write(21,'(2i5,a,2f10.5)') 1, 2, ' no ', 1.0 , 1.0
@@ -156,23 +158,23 @@ subroutine WriteTop()
 		write(21,'(a,2f10.4,a,2f10.5)') ' OW ',  15.9994, 0.00000, ' A ', 0.31589, 0.774903
 		write(21,'(a,2f10.4,a,2f10.5)') ' HW ',   1.0080, 0.5564,  ' A ', 0.01,   0.0
 		write(21,'(a,2f10.4,a,2f10.5)') ' MW ',   0.0000, -1.1128, ' D ', 0.01,   0.0
-		
+
 		write(21,'(a)') ' [ bondtypes ] '
 		write(21,'(2a,i5,2f15.5)') '  CE1  ','  CE2  ', 1 ,  0.19842,  500000.0
 		write(21,'(2a,i5,2f15.5)') '  CE2  ','  OE1  ', 1 ,  0.171581,  500000.0
 		write(21,'(2a,i5,2f15.5)') '  OE1  ','  HE1  ', 1 ,  0.095053,  500000.0
 		write(21,'(2a,i5,2f15.5)') '  OW   ','  HW  ', 1 ,  0.09572,  500000.0
 		write(21,'(2a,i5,2f15.5)') '  OW   ','  MW  ', 1 ,  0.01546,  500000.0
-		
+
 		write(21,'(a)') ' [ angletypes ] '
 		write(21,'(3a,i5,2f10.5)') '  CE1  ','  CE2  ', '  OE1  ', 1 , 90.95 ,  500.0
 		write(21,'(3a,i5,2f10.5)') '  CE2  ','  OE1  ', '  HE1  ', 1 , 106.368 ,  500.0
 		write(21,'(3a,i5,2f10.5)') '  HW   ','  OW   ', '  HW   ', 1 , 104.52 ,  500.0
 		write(21,'(3a,i5,2f10.5)') '  MW  ','  OW  ', '  HW   ', 1 , 52.26 ,  500.0
-		
+
 		write(21,'(a)') ' [ dihedraltypes ] '
 		write(21,'(4a,i5,4f10.5)') '  CE1  ','  CE2  ', '  OE1  ','  HE1  ', 5 ,5.0,0.0,0.0,0.0
-		
+
 		write(21,'(a)') ' [ moleculetype ] '
 		write(21,'(a,a)') '  MEM ',  ' 0'
 		write(21,'(a)') ' [ atoms ] '
@@ -196,61 +198,61 @@ subroutine WriteTop()
 		write(21,'(a)') ' [ position_restraints ] '
 		write(21,'(a)') ' [ constraints ] '
 		write(21,'(a)') '    '
-		
+
 		write(21,'(a)') ' [ moleculetype ] '
 		write(21,'(a,a)') '  ETH ',  ' 3'
 		write(21,'(a)') ' [ atoms ] '
-		
+
 		write(21,'(i5,a,i5,2a,i5,2f10.5)') 1 ,'  CE1  ',1,' ETH ', 'CE1' , 1 , 0.000 , 15.011
 		write(21,'(i5,a,i5,2a,i5,2f10.5)') 2 ,'  CE2  ',1,' ETH ', 'CE2' , 1 , 0.2556 , 14.011
 		write(21,'(i5,a,i5,2a,i5,2f10.5)') 3 ,'  OE1  ',1,' ETH ', 'OE1' , 1 , -0.69711 , 15.9994
 		write(21,'(i5,a,i5,2a,i5,2f10.5)') 4 ,'  HE1  ',1,' ETH ', 'HE1' , 1 , 0.44151 , 1.008
-		
+
 		write(21,'(a)') ' [ bonds ] '
-		
+
 		write(21,'(a)') ' 1    2    1'
 		write(21,'(a)') ' 2    3    1'
 		write(21,'(a)') ' 3    4    1'
-		
+
 		write(21,'(a)') ' [ pairs ] '
 		write(21,'(a)') ' [ angles ] '
-		
+
 		write(21,'(a)') ' 1    2    3    1'
 		write(21,'(a)') ' 2    3    4    1'
-		
+
 		write(21,'(a)') ' [ dihedrals ] '
 		write(21,'(a)') '1    2    3    4    5'
 		write(21,'(a)') ' [ exclusions ] '
 		write(21,'(a)') ' [ position_restraints ] '
 		write(21,'(a)') ' [ constraints ] '
 		write(21,'(a)') '    '
-		
+
 		write(21,'(a)') ' [ moleculetype ] '
 		write(21,'(a,a)') '  WAT ',  ' 3'
 		write(21,'(a)') ' [ atoms ] '
-		
+
 		write(21,'(i5,a,i5,2a,i5,2f10.5)') 1 ,' OW ',1,' WAT ', ' OW ' , 1 , 0.000 , 15.9994
 		write(21,'(i5,a,i5,2a,i5,2f10.5)') 2 ,' HW ',1,' WAT ', ' HW ' , 1 , 0.5564 , 1.008  ! 1.0080, 0.5564
 		write(21,'(i5,a,i5,2a,i5,2f10.5)') 3 ,' HW ',1,' WAT ', ' HW ' , 1 , 0.5564 , 1.008
 		write(21,'(i5,a,i5,2a,i5,2f10.5)') 4 ,' MW ',1,' WAT ', ' MW ' , 1 , -1.1128 , 0.0
-		
+
 		write(21,'(a)') ' [ bonds ] '
-		
+
 		write(21,'(a)') ' 1    2    1'
 		write(21,'(a)') ' 1    3    1'
-		
+
 		write(21,'(a)') ' [ pairs ] '
 		write(21,'(a)') ' [ angles ] '
-		
+
 		write(21,'(a)') ' 2    1    3    1'
-		
+
 		write(21,'(a)') ' [ dihedrals ] '
 		write(21,'(a)') ' [ exclusions ] '
 		write(21,'(a)') ' 1    2    3    4'
 		write(21,'(a)') ' 2    1    3    4'
 		write(21,'(a)') ' 3    1    2    4'
 		write(21,'(a)') ' 4    1    2    3'
-		
+
 		!write(21,'(a)') ' [ position_restraints ] '
 		!write(21,'(a)') ' [ constraints ] '
 		write(21,'(a)') ' [ virtual_sites3 ] '
@@ -263,7 +265,7 @@ subroutine WriteTop()
 			write(21,'(a,i6)') InitSubName(i,1),1
 		enddo
 		write(21,'(a,i6)') ' MEM  ', 2
-		
+
 	close(21)
 end subroutine
 
@@ -271,7 +273,7 @@ subroutine WriteScript()
 	use GlobalVar
 	implicit none
 	integer(4) i
-	
+
 	open(23,file='start.sh')
 		write(23,'(a)') '#/bin/bash'
 		write(23,'(a)') 'rm test.trp'
@@ -322,14 +324,14 @@ subroutine WriteScript()
 			write(23,'(a)') 'rm \#*'
 		write(23,'(a)') 'done'
 	print *, ' Script creaton file DONE'
-	
+
 end subroutine
 
 subroutine WriteTemp()
 	use GlobalVar
 	implicit none
 	integer(4) i
-	
+
 	open(24,file='test.temp')
 		write(24,'(f20.10)') ConVol1B	!liq vol 1
 		write(24,'(f20.10)') ConVol1E	!liq vol 2
@@ -372,7 +374,7 @@ subroutine ReadMainIn()
 		allocate(InitVX(SubNum,MaxAtoms))
 		allocate(InitVY(SubNum,MaxAtoms))
 		allocate(initVZ(SubNum,MaxAtoms))
-		
+
 		do i=1,SubNum	!reading grofile
 			read(7,*) SubGroFile, TempReal1, TempReal2,TempReal3
 			write(SubGroFile,'(2a)') trim(adjustl(SubGroFile)), '.gro'
@@ -386,7 +388,7 @@ subroutine ReadMainIn()
 			enddo
 			close(8)
 			print *,' Reading ', SubGroFile, '  DONE'
-			print *,' Fraction ', TempReal1, ' Activiti L ', TempReal2 ,' Activiti G ', TempReal3 
+			print *,' Fraction ', TempReal1, ' Activiti L ', TempReal2 ,' Activiti G ', TempReal3
 		enddo	!reading done
 		close(7)
 end subroutine

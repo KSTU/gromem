@@ -116,6 +116,7 @@ program dcvmd
 	real(8),allocatable:: SubAtomVX(:,:,:),SubAtomVY(:,:,:),SubAtomVZ(:,:,:)
 	integer(4) MemAtom
 	real(8),allocatable:: MemX(:),MemY(:),MemZ(:)
+ integer(4),allocatable:: MemMol(:)
 	character(5), allocatable:: MemName(:)
 	integer(4) TempInt,TempInt1,TempInt2
 	real(8) TempR1,TempR2,TempR3
@@ -125,7 +126,7 @@ program dcvmd
 	integer(4) Mem1Len
 	real(8) RoL
 	integer(4) TotalMol
-	
+
 	real(8),allocatable:: MolX(:,:),MolY(:,:),MolZ(:,:)
 	integer(4),allocatable:: InOutV1(:,:),InOutV2(:,:)
 	integer(4) MemType
@@ -134,7 +135,7 @@ program dcvmd
 	real(8),allocatable:: SubEps(:,:)
 	real(8),allocatable:: SubMass(:,:)
 	real(8),allocatable:: SubCha(:,:)
-	
+
 	real(8) SumX,SumY,SumZ,SumMass
 	real(8),allocatable:: Vol1X(:,:,:),Vol1Y(:,:,:),Vol1Z(:,:,:)
 	real(8),allocatable:: Vol2X(:,:,:),Vol2Y(:,:,:),Vol2Z(:,:,:)
@@ -146,7 +147,7 @@ program dcvmd
 	real(8),allocatable:: CenAtomX(:,:),CenAtomY(:,:),CenAtomZ(:,:)
 	real(8),allocatable:: CheckX(:),CheckY(:),CheckZ(:)
 	real(8) RandX,RandY,RandZ
-	
+
 	integer(4) NStep, step
 	real(8) Vol1Ak,Vol2Ak
 	integer(4) ch, CheckType
@@ -157,7 +158,7 @@ program dcvmd
 	real(8),allocatable:: Vol1MX(:,:),Vol1MY(:,:),Vol1MZ(:,:)
 	real(8),allocatable:: Vol2MX(:,:),Vol2MY(:,:),Vol2MZ(:,:)
 	real(8),allocatable:: Vol3MX(:,:),Vol3MY(:,:),Vol3MZ(:,:)
-	
+
 	integer(4) StepType,CheckMol
 	real(8) rmx,rmy,rmz
 	real(8) TotBoxLen
@@ -174,9 +175,10 @@ program dcvmd
 	integer(4) First
 	real(8) DTime
 	real(8) Mem1B,Mem1E,Mem2B,Mem2E
-	
+ integer(4) PolyMol, FixAtom, TotalSubAtom, MemTotAtom
+
 	call randomn
-	
+
 	open(7,file='test.temp')
 		read(7,'(f20.10)') BoxL1
 		read(7,'(f20.10)') BoxL2
@@ -215,13 +217,14 @@ program dcvmd
 		allocate(SubAtomVX(SubNum+1,TotalMol,30))
 		allocate(SubAtomVY(SubNum+1,TotalMol,30))
 		allocate(SubAtomVZ(SubNum+1,TotalMol,30))
+  allocate(MemMol(MemAtom))
 		allocate(MemName(MemAtom))
 		allocate(MemX(MemAtom))
 		allocate(MemY(MemAtom))
 		allocate(MemZ(MemAtom))
 	close(7)
 	print *, 'Temp FILE ReAD DONE'
-	
+
 	open(9,file='main.in')
 		read(9,*) TempString
 		read(9,*) SubNum
@@ -252,9 +255,13 @@ program dcvmd
 		read(9,*) TopInt
 		read(9,*) TempString
 		read(9,*) DTime
+  print *, TempString, DTime
+  read(9,*) TempString
+  print *, TempString
+  read(9,*) PolyMol, FixAtom, MemTotAtom
 	close(9)
 	print *, 'MEMIN File read DONE'
-		
+
 	allocate(SubSigma(SubNum+1,30))
 	allocate(SubEps(SubNum+1,30))
 	allocate(SubMass(SubNum+1,30))
@@ -270,7 +277,7 @@ program dcvmd
 	enddo
 	print *, ' Parameters file read DONE '
 	!pause
-		
+
 	open(8,file='test.gro')
 		read(8,'(a)') TempString
 		read(8,'(i6)') TotalAtom
@@ -288,9 +295,10 @@ program dcvmd
 			!pause
 		enddo
 		do i=1,MemAtom
-			read(8,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt,TempString,MemName(i),&
+			read(8,'(i5,2a5,i5,3f8.3,3f8.4)') MemMol(i),TempString,MemName(i),&
 			&TempInt1,MemX(i),MemY(i),MemZ(i),&
 			&TempR1,TempR2,TempR3
+   MemMol(i)=MemMol(i)-TempInt
 		enddo
 	close(8)
 	print *, ' GRO FILE READ DONE '
@@ -314,7 +322,7 @@ program dcvmd
 			MolZ(i,j)=SumZ/SumMass
 		enddo
 	enddo
-	
+
 	print *, 'Molecule centers calculating DONE'
 	allocate(SumInV1(SubNum+1))
 	allocate(SumInV2(SubNum+1))
@@ -339,7 +347,7 @@ program dcvmd
 		enddo
 		SumOut(i)=NLiq(i)-SumInV1(i)-SumInV2(i)
 	enddo
-	
+
 	print *, 'Summing numbers of molecules DONE'
 	allocate(Vol1X(SubNum+1,10000,10))
 	allocate(Vol1Y(SubNum+1,10000,10))
@@ -347,7 +355,7 @@ program dcvmd
 	allocate(Vol1VX(SubNum+1,10000,10))
 	allocate(Vol1VY(SubNum+1,10000,10))
 	allocate(Vol1VZ(subNum+1,10000,10))
-	
+
 	allocate(Vol2X(SubNum+1,10000,10))
 	allocate(Vol2Y(SubNum+1,10000,10))
 	allocate(Vol2Z(SubNUm+1,10000,10))
@@ -360,7 +368,7 @@ program dcvmd
 	allocate(Vol3VX(SubNum+1,10000,10))
 	allocate(Vol3VY(SubNum+1,10000,10))
 	allocate(Vol3VZ(SubNum+1,10000,10))
-	
+
 	allocate(Vol1MX(SubNum+1,10000))
 	allocate(Vol1MY(SubNum+1,10000))
 	allocate(Vol1MZ(SubNum+1,10000))
@@ -370,7 +378,7 @@ program dcvmd
 	allocate(Vol3MX(SubNum+1,10000))
 	allocate(Vol3MY(SubNum+1,10000))
 	allocate(Vol3MZ(SubNum+1,10000))
-	
+
 	print*, 'Mega Allocating DONE'
 	do i=1,SubNum
 		TempInt=1
@@ -419,18 +427,18 @@ program dcvmd
 			endif
 		enddo
 	enddo
-	
+
 	print *, 'Rewriting coordinates by box parts'
 	call date_and_time(time1,time2,time3,seed)
 	rseed=ceiling(abs(cos(float(seed(8))/1000.0))*20000.0)
 	print *,' Random integer ', rseed
 	call srand(rseed)
-	
+
 	!centrating molecules
 	allocate(CenAtomX(SubNum+1,30))
 	allocate(CenAtomY(SubNum+1,30))
 	allocate(CenAtomZ(SubNum+1,30))
-	
+
 	do i=1,SubNum
 		do j=1,SubAtomNum(i)
 			CenAtomX(i,j)=SubAtomX(i,1,j)-MolX(i,1)	!хотя бы одна молеула быть должна
@@ -444,7 +452,7 @@ program dcvmd
 	allocate(CheckX(30))
 	allocate(CheckY(30))
 	allocate(CheckZ(30))
-	
+
 	allocate(MixSig(SubNum+1,SubNum+1,30,30))
 	allocate(MixEps(SubNum+1,SubNum+1,30,30))
 	allocate(MixCha(SubNum+1,SubNum+1,30,30))
@@ -463,10 +471,10 @@ program dcvmd
 	print *, ' CAlculating Mixrule DONE'
 	!Vol1 create
 	!pause
-	
+
 	BoxVol=BoxH*BoxH*BoxH
 	!print*, log(AkL(1)*BoxVol/float(SumInV1(1)+1))
-	
+
 	do step=1,NStep
 	StepType=ceiling(getrand()*4.0)
 	StepType=1
@@ -495,12 +503,12 @@ program dcvmd
 !					endif
 !					if (rmy>BoxH/2.0) then
 !						dry=BoxH/2.0
-!					else 
+!					else
 !						dry=0.0
 !					endif
 !					if (rmz>BoxH/2.0) then
 !						drz=BoxH/2.0
-!					else 
+!					else
 !						drz=0.0
 !					endif
 !					rmx=rmx-drx
@@ -539,7 +547,7 @@ program dcvmd
 !					endif
 				enddo
 			enddo
-		
+
 			Prob=exp(-DeltaEn/Temp)   !!*AkL(CheckType)     !log(AkL(CheckType)*BoxVol/float(SumInV1(CheckType)+1)))
 			!Prob=2.0
 			if (DeltaEn<AkL(i)) then
@@ -560,7 +568,7 @@ program dcvmd
 			endif
 		endif
 	endif
-	
+
 	if (StepType==2) then
 		RandX=getrand()*BoxH
 		RandY=getrand()*BoxH
@@ -584,12 +592,12 @@ program dcvmd
 				endif
 				if (rmy>BoxH/2.0) then
 					dry=BoxH/2.0
-				else 
+				else
 					dry=0.0
 				endif
 				if (rmz>BoxH*1.5) then
 					drz=BoxH*1.5
-				else 
+				else
 					drz=0.0
 				endif
 				rmx=rmx-drx
@@ -630,8 +638,8 @@ program dcvmd
 			enddo
 		endif
 	endif
-	
-	if (StepType==3) then 
+
+	if (StepType==3) then
 		CheckType=ceiling(rand()*float(SubNum))
 		CheckMol=ceiling(rand()*float(SumInV1(CheckType)))
 		DeltaEn=0.0
@@ -648,12 +656,12 @@ program dcvmd
 					endif
 					if (rmy>BoxH/2.0) then
 						dry=BoxH/2.0
-					else 
+					else
 						dry=0.0
 					endif
 					if (rmz>BoxH/2.0) then
 						dry=BoxH/2.0
-					else 
+					else
 						dry=0.0
 					endif
 					rmx=rmx-drx
@@ -697,8 +705,8 @@ program dcvmd
 			SumInV1(CheckType)=SumInV1(CheckType)-1
 		endif
 	endif
-	
-	if (StepType==4) then 
+
+	if (StepType==4) then
 		CheckType=ceiling(rand()*float(SubNum))
 		CheckMol=ceiling(rand()*float(SumInV2(CheckType)))
 		DeltaEn=0.0
@@ -715,12 +723,12 @@ program dcvmd
 					endif
 					if (rmy>BoxH/2.0) then
 						dry=BoxH/2.0
-					else 
+					else
 						dry=0.0
 					endif
 					if (rmz>BoxH*1.5) then
 						dry=BoxH*1.5
-					else 
+					else
 						dry=0.0
 					endif
 					rmx=rmx-drx
@@ -764,9 +772,9 @@ program dcvmd
 			SumInV2(CheckType)=SumInV2(CheckType)-1
 		endif
 	endif
-	
+
 	enddo
-	
+
 	Ntot=0
 	do i=1,SubNum
 		do j=1,SumOut(i)
@@ -779,27 +787,30 @@ program dcvmd
 !			Ntot=Ntot+1
 !		enddo
 	enddo
-	
+
 	!groout
 	open(31,file='testout.gro')
 	write(31,'(a)') ' generated by dcv '
 	write(31,'(i6)') Ntot+MemAtom
 	TempInt=1
+ TempInt1=1
 	do i=1,SubNum
 		do j=1,SumOut(i)
 			do k=1,SubAtomNum(i)
-				write(31,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt, SubName(i) , SubAtomName(i,1,k),k,&
+				write(31,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt1, SubName(i) , SubAtomName(i,1,k),TempInt,&
 				&Vol3X(i,j,k),Vol3Y(i,j,k),Vol3Z(i,j,k),Vol3VX(i,j,k),Vol3VY(i,j,k),Vol3VZ(i,j,k)
 				TempInt=TempInt+1
 			enddo
+   TempInt1=TempInt1+1
 		enddo
 		do j=1,SumInV1(i)
 			do k=1,SubAtomNum(i)
 				print * ,i,j,k,  TempInt, SubName(i) , SubAtomName(i,j,k), SubAtomName(i,1,k)
-				write(31,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt, SubName(i) , SubAtomName(i,1,k),k,&
+				write(31,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt1, SubName(i) , SubAtomName(i,1,k),TempInt,&
 				&Vol1X(i,j,k),Vol1Y(i,j,k),Vol1Z(i,j,k),Vol1VX(i,j,k),Vol1VY(i,j,k),Vol1VZ(i,j,k)
 				TempInt=TempInt+1
 			enddo
+   TempInt1=TempInt1+1
 		enddo
 	enddo
 !	do i=1,SubNum
@@ -820,15 +831,16 @@ program dcvmd
 !			enddo
 !		enddo
 !	enddo
+
 	do i=1,MemAtom
-		write(31,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt,'MEM',MemName(i),&
-		&1,MemX(i),MemY(i),MemZ(i),&
+		write(31,'(i5,2a5,i5,3f8.3,3f8.4)') MemMol(i)+TempInt1-1,'MEM',MemName(i),&
+		&TempInt,MemX(i),MemY(i),MemZ(i),&
 		&0.0,0.0,0.0
 		TempInt=TempInt+1
 	enddo
 	write(31,'(3f20.5)') BoxH, BoxH, TotBoxLen
 	close(31)
-	
+
 	TotalMol=0		!здесь все меняется ОЛОЛО
 	allocate(NMolLiq(SubNum+1))
 	TotalMol=0
@@ -850,7 +862,7 @@ program dcvmd
 			NLiq(i)=NLiq(i)+1
 		enddo
 	enddo
-	
+
 	!correcting test.temp
 	open(33,file='test.temp')
 		write(33,'(f20.10)') BoxL1
@@ -883,7 +895,7 @@ program dcvmd
 			AkL(i)=100000.0
 		endif
 	enddo
-	
+
 	TotalMol=0
 	do i=1,SubNum
 		NLiq(i)=0
@@ -894,7 +906,7 @@ program dcvmd
 				NLiq(i)=NLiq(i)+1
 				TotalMol=TotalMol+1
 			enddo
-			
+
 		enddo
 		do j=1,SumOut(i)
 			NMolLiq(i)=NMolLiq(i)+1
@@ -902,17 +914,17 @@ program dcvmd
 				NLiq(i)=NLiq(i)+1
 				TotalMol=TotalMol+1
 			enddo
-			
+
 		enddo
 	enddo
-	
+
 	open(15,file='dens.out')
 		do i=1,SubNum
 			write(15,'(a,f20.10)') SubName(i), SumInV1(i)/BoxVol*Sigma*Sigma*Sigma
 		enddo
 		write(15,'(f20.10)') BoxH,BoxVol
 	close(15)
-	
+
 	open(9,file='main.in')
 		write(9,'(a)') 'Numbers of Substanses'
 		write(9,'(i6)') SubNum
@@ -941,8 +953,10 @@ program dcvmd
 		write(9,'(i6)') TopInt
 		write(9,'(a)') 'Delta Time'
 		write(9,'(f20.10)') DTime
+  write(9,'(a)') 'Polymer molecules / freez number / total atom of molecule'
+  write(9,'(i6   i6   i6)')  PolyMol, FixAtom, MemTotAtom
 	close(9)
-	
+
 	!change top
 	open(41,file='test.top')
 	open(42,file='testnew.top')
@@ -959,12 +973,14 @@ program dcvmd
 		write(42,'(a10,i6)') 'MEM', MemAtom ! (Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1))*2    !MemAtom
 	elseif (MemType==3) then
 		write(42,'(a10,i6)') 'MEM', MemAtom !(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)*3)*2    !MemAtom
+	elseif (MemType==4) then	!4-polymermembranes
+		write(42,'(a10,i6)') 'MEM', PolyMol !(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)*3)*2    !MemAtom
 	else
-		write(42,'(a10,i6)') 'MEM', 2 
+		write(42,'(a10,i6)') 'MEM', 2
 	endif
 	close(42)
 	close(41)
-	
+
 	!change index file
 	open(45,file='indexnew.ndx')
 	TempInt=1
@@ -988,7 +1004,7 @@ program dcvmd
 		TempInt=TempInt+1
 		TempInt1=TempInt1+1
 	enddo
-	
+
 	TempInt=1
 	write(45,'(a)') ' '
 	do i=1,SubNum
@@ -1007,6 +1023,7 @@ program dcvmd
 	write(45,'(a)') ' '
 	write(45,'(a)') '[ MEM ]'
 	TempInt1=1
+ TotalSubAtom=TempInt
 	do i=1,MemAtom
 		write(45,'(i8,a1,$)') TempInt,' '
 		if (mod(TempInt,10)==0) then
@@ -1016,8 +1033,19 @@ program dcvmd
 		TempInt1=TempInt1+1
 	enddo
 	write(45,'(a)') '  '
-	
-	close(45)
-	
-end program
+!add center fixing center of polymere molecule
+if (MemType==4) then
+TempInt1=1
+write(45,'(a)') '[ MF ]'
+ do i=1,PolyMol
+  write(45,'(i8,a1,$)') TotalSubAtom+(i-1)*MemTotAtom+FixAtom,' '
+  if (mod(TempInt1,10)==0) then
+			write(45,'(a)') ' '
+		endif
+  TempInt1=TempInt1+1
+ enddo
+endif
 
+close(45)
+
+end program

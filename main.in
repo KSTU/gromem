@@ -2,16 +2,16 @@ Numbers of Substanses
      2
 B	0.5000	0.010000	0.010000	0.40000
 C	0.5000	0.010000	0.010000	0.40000
-Initial Mem Type
+Initial Mem Type (3 - polymer)
      1
 Sigma in GROMACS
    0.30000
 MEMcell len
    2.00000
 MEM H/W
-     8
+     3
 MEM Len
-     20
+     4
 Liq density
    0.3000
 NSteps
@@ -22,3 +22,5 @@ Top String
     47
 Delta Time
   10.0
+Polymer molecules / freez number / total atom of molecule
+    16    10    20
