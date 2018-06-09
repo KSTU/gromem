@@ -12,7 +12,7 @@ nvtmain: tempprog.f90
 	$(FC) -o memcv5 create5.f90
 	$(FC) -o dcvmd dcv.f90
 	$(FC) -o denscalc denscalc.f90
-	$(CC) -O2 -o velcalc velcalc.c -lm
+	$(CC) -O2 -o velcalc velcalc.c -lm	#
 	
 #cuda_add.o: cuda_add.cu
 #	/usr/local/cuda/bin/nvcc -c cuda_add.cu     #-deviceemu
