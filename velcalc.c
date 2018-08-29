@@ -292,6 +292,7 @@ float** avv3;
 	r3=(float*)malloc(dn3*sizeof(float));
 
 	//z velosity
+	printf("test2\n");
 	avvz0=(float**)malloc(listNmol*sizeof(float*));
 	for(int i=0;i<listNmol;i++){
 		avvz0[i]=(float*)calloc(dn0,sizeof(float));
@@ -308,6 +309,7 @@ float** avv3;
 	for(int i=0;i<listNmol;i++){
 		avvz3[i]=(float*)calloc(dn3,sizeof(float));
 	}
+		printf("test3\n");
 	//v^2 averages
 	avv0=(float**)malloc(listNmol*sizeof(float*));
 	for(int i=0;i<listNmol;i++){
@@ -343,7 +345,7 @@ float** avv3;
 	for(int i=0;i<dn3;i++){
 		r3[i]=(i+0.5)/dn3*boxZ;
 	}
-	
+		printf("test4 %d\n", start);
 	if(start!=1){
 		//read from file
 		fileId=fopen("averages.temp","r");
@@ -411,7 +413,7 @@ float** avv3;
 		}
 		fclose(fileId);
 	}
-	printf("test2\n");
+	printf("test-2\n");
 	for(int i=0;i<mNum;i++){
 		id0=floor(molCZ[i]/boxZ*dn0);
 		printf("%d %d %f\n",i,id0,molCZ[i]/boxZ*dn0);
@@ -435,7 +437,7 @@ float** avv3;
 		avv3[molType[i]][id3]+=molCVX[i]*molCVX[i]+molCVY[i]*molCVY[i]+molCVZ[i]*molCVZ[i];
 	}
 	nstep+=1.0;
-	printf("test3\n");
+	printf("test-3\n");
 	
 //plot averages
 	fileId=fopen("v-dens0.out","w");
