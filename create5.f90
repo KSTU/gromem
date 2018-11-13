@@ -46,6 +46,11 @@ program mainv5
 	real(8) CurTime,DTime
 	integer(4) First
 	!
+	integer(4) WallAtomNum
+	real(8), allocatable:: WallX(:), WallY(:), WallZ(:)
+	real(8) WallShift
+
+
 	MaxAtoms=40
 	call srand(15872)
 	eps1=0.00831446
@@ -388,6 +393,129 @@ program mainv5
 			print *, ' Randomization BoxArr DONE '
 		endif
 		!!!!!!!!!!!!!!!!!!!!!
+		!!!!!!!!!!!!!!!!!!!!!  Жидкие мембаны
+		if (MemType==5) then
+			BoxH=Mem1HW*Sigma*MemDelta
+			BoxW=Mem1HW*Sigma*MemDelta
+			MemLen=Mem1Len*Sigma*MemDelta
+			BoxLiqLen=3.0*BoxH
+			BoxGasLen=3.0*BoxLiqLen
+			BoxLiqVol=BoxH*BoxW*BoxLiqLen
+			NLiqTot=RoL*BoxLiqVol/Sigma/Sigma/Sigma
+			!---------------------Wall
+			WallShift=0.0 !Sigma*0.3
+			!---------------------Wall
+			if (SubNum==1) then
+				NLiq(1)=NLiqTot
+			else
+				TempInt=0
+				do i=1,SubNum-1
+					NLiq(i)=ceiling(NLiqTot*frac(i))
+					TempInt=TempInt+Nliq(i)
+				enddo
+				Nliq(SubNum)=NLiqTot-TempInt
+			endif
+			NAtomTot=0
+			do i=1,SubNum
+				NAtomTot=NAtomTot+InitAtom(i)*Nliq(i)
+			enddo
+			BoxPart=1
+			do while (BoxPart*BoxPart*BoxPart*3<NLiqTot)
+				BoxPart=BoxPart+1
+			enddo
+			print *, ' NLiqTot ', NLiqTot
+			allocate(MemX(Mem1HW*Mem1HW*Mem1Len))
+			allocate(MemY(Mem1HW*Mem1HW*Mem1Len))
+			allocate(MemZ(Mem1HW*Mem1HW*Mem1Len))
+			allocate(BoxArrX(BoxPart*BoxPart*BoxPart*3))
+			allocate(BoxArrY(BoxPart*BoxPart*BoxPart*3))
+			allocate(BoxArrZ(BoxPart*BoxPart*BoxPart*3))
+			allocate(BoxArrOpen(BoxPart*BoxPart*BoxPart*3))
+			do i=1,Mem1Len
+				do j=1,Mem1HW
+					do k=1,Mem1HW
+						MemX((i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(j)-0.5)*Sigma*MemDelta
+						MemY((i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(k)-0.5)*Sigma*MemDelta
+						MemZ((i-1)*Mem1HW*Mem1HW+(j-1)*Mem1Hw+k)=(float(i)-0.5)*Sigma*MemDelta
+					enddo
+				enddo
+			enddo
+			print *, ' Mem Creation DONE'
+			do i=1,BoxPart*3
+				do j=1,BoxPart
+					do k=1,BoxPart
+						BoxArrX((i-1)*BoxPart*BoxPart+(j-1)*BoxPart+k)=(float(j)-0.5)*BoxH/float(BoxPart)
+						BoxArrY((i-1)*BoxPart*BoxPart+(j-1)*BoxPart+k)=(float(k)-0.5)*BoxW/float(BoxPart)
+						BoxArrZ((i-1)*BoxPart*BoxPart+(j-1)*BoxPart+k)=(float(i)-0.5)*BoxLiqLen/float(BoxPart*3)
+						BoxArrOpen((i-1)*BoxPart*BoxPart+(j-1)*BoxPart+k)=0
+					enddo
+				enddo
+			enddo
+			print *, ' BoxArr Creation DONE'
+			allocate(MolTypeNum(NLiqTot))
+			TempInt=0
+			do i=1,SubNum
+				do j=1,NLiq(i)
+					Pass=0
+					TempInt=TempInt+1
+					do while (Pass==0)
+						RandInt=ceiling(rand()*float(BoxPart*BoxPart*BoxPart*3))
+						if (BoxArrOpen(RandInt)==0) then
+							MolTypeNum(TempInt)=RandInt
+							BoxArrOpen(RandInt)=i
+							pass=1
+						endif
+					enddo
+				enddo
+			enddo
+			print *, ' Randomization BoxArr DONE '
+			!добывляем атомы стенки мембраны
+			WallAtomNum=Mem1HW*Mem1HW*4
+			
+			allocate(WallX(WallAtomNum))
+			allocate(WallY(WallAtomNum))
+			allocate(WallZ(WallAtomNum))
+			TempInt=0
+			do i=1,Mem1HW
+				do j=1,Mem1HW
+					TempInt=TempInt+1
+					WallX(TempInt)=(float(i)-0.5)*Sigma*MemDelta
+					WallY(TempInt)=(float(j)-0.5)*Sigma*MemDelta
+					WallZ(TempInt)=0
+				enddo
+			enddo
+			do i=1,Mem1HW
+				do j=1,Mem1HW
+					TempInt=TempInt+1
+					WallX(TempInt)=(float(i)-0.5)*Sigma*MemDelta
+					WallY(TempInt)=(float(j)-0.5)*Sigma*MemDelta
+					WallZ(TempInt)=Sigma*MemDelta*Mem1Len+WallShift
+				enddo
+			enddo
+			!!!
+			do i=1,Mem1HW
+				do j=1,Mem1HW
+					TempInt=TempInt+1
+					WallX(TempInt)=(float(i)-0.5)*Sigma*MemDelta
+					WallY(TempInt)=(float(j)-0.5)*Sigma*MemDelta
+					WallZ(TempInt)=0+BoxLiqLen+MemLen
+				enddo
+			enddo
+			do i=1,Mem1HW
+				do j=1,Mem1HW
+					TempInt=TempInt+1
+					WallX(TempInt)=(float(i)-0.5)*Sigma*MemDelta
+					WallY(TempInt)=(float(j)-0.5)*Sigma*MemDelta
+					WallZ(TempInt)=Sigma*MemDelta*Mem1Len+WallShift+BoxLiqLen+MemLen
+				enddo
+			enddo
+			
+		endif
+		
+
+		
+
+		!!!!!!!!!!!!!!!!!!!!!!!!!!1
 
 		!generating GRO
 		print *, NLiqTot
@@ -401,6 +529,9 @@ program mainv5
 			endif
 			if (MemType==3) then
 				write(20,'(i6)') NAtomTot+(Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)*3)*2 !BoxPart*BoxPart*BoxPart*3+
+			endif
+			if (MemType==5) then
+				write(20,'(i6)') NAtomTot+Mem1HW*Mem1HW*Mem1Len*2+WallAtomNum !BoxPart*BoxPart*BoxPart*3+
 			endif
 			TempInt=1
 			do i=1,NLiqTot
@@ -473,6 +604,28 @@ program mainv5
 					TempInt=TempInt+1
 				enddo
 			endif
+			if (MemType==5) then	!жидкая мембрана
+				do i=1,Mem1HW*Mem1HW*Mem1Len
+					write(20,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt, 'MEM', ' A',&
+					&TempInt,MemX(i), MemY(i),MemZ(i),&
+					&0.0,0.0,0.0
+					TempInt=TempInt+1
+				enddo
+				do i=1,Mem1HW*Mem1HW*Mem1Len
+					write(20,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt, 'MEM', ' A',&
+					&TempInt,&
+					&MemX(i),MemY(i),MemZ(i)+MemLen+BoxLiqLen,&
+					&0.0,0.0,0.0
+					TempInt=TempInt+1
+				enddo
+				do i=1,WallAtomNum
+					write(20,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt, 'WAL', ' W',&
+					&TempInt,&
+					&WallX(i),WallY(i),WallZ(i),&
+					&0.0,0.0,0.0
+					TempInt=TempInt+1
+				enddo
+			endif
 			write(20,'(f9.5,a,f9.5,a,f9.5)') BoxH,' ' , BoxW,' ', MemLen*2+BoxLiqLen+BoxGasLen
 		close(20)
 		!top files
@@ -485,6 +638,14 @@ program mainv5
 			write(21,'(a,2f10.4,a,2e20.10)') ' A ', 1.0, 0.0, ' A ', Sigma*1.0,  eps1 
 			write(21,'(a,2f10.4,a,2e20.10)') ' B ', 1.0, 0.0, ' A ', Sigma*1.0,  eps1 
 			write(21,'(a,2f10.4,a,2e20.10)') ' C ', 1.0, 0.0, ' A ', Sigma*1.0,  eps1 
+			write(21,'(a,2f10.4,a,2e20.10)') ' W ', 1.0, 0.0, ' A ', Sigma*2.0,  eps1 
+			
+			write(21,'(a)') '[ nonbond_params ]'
+			write(21,'(a)') 'A     B     1     0.3000000000E+00     1.662891917E-02'
+			write(21,'(a)') 'A     C     1     0.3000000000E+00     0.8314459585E-02'
+			write(21,'(a)') 'A     W     1     0.60       0.8314459585E-02'
+			write(21,'(a)') 'B     W     1     0.1      0.0'
+			write(21,'(a)') 'C     W     1     0.1      0.0'
 			
 			write(21,'(a)') ' [ moleculetype ] '
 			write(21,'(a,a)') '  B   ',  ' 0'
@@ -524,6 +685,19 @@ program mainv5
 			write(21,'(a)') ' [ position_restraints ] '
 			write(21,'(a)') ' [ constraints ] '
 			write(21,'(a)') '    '
+
+			write(21,'(a)') ' [ moleculetype ] '
+			write(21,'(a,a)') '  WAL ',  ' 0'
+			write(21,'(a)') ' [ atoms ] '
+			write(21,'(i5,a,i5,2a,i5,2f10.5)') 1 ,' W ',1,' W ',' W ',1,0.00,1.0 
+			write(21,'(a)') ' [ bonds ] '
+			write(21,'(a)') ' [ pairs ] '
+			write(21,'(a)') ' [ angles ] '
+			write(21,'(a)') ' [ dihedrals ] '
+			write(21,'(a)') ' [ exclusions ] '
+			write(21,'(a)') ' [ position_restraints ] '
+			write(21,'(a)') ' [ constraints ] '
+			write(21,'(a)') '    '
 			
 			write(21,'(a)') ' [ system ] '
 			write(21,'(a)') ' generateg with membcreat v5 '
@@ -537,6 +711,9 @@ program mainv5
 				write(21,'(a,i6)') ' MEM  ', (Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1))*2
 			elseif (MemType==3) then
 				write(21,'(a,i6)') ' MEM  ', (Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)*3)*2
+			elseif (MemType==5) then
+				write(21,'(a,i6)') ' MEM  ', Mem1HW*Mem1HW*Mem1Len*2
+				write(21,'(a,i6)') ' WAL  ', WallAtomNum
 			else
 				write(21,'(a,i6)') ' MEM  ', 2
 			endif
@@ -607,51 +784,52 @@ program mainv5
 		open(23,file='start.sh')
 			write(23,'(a)') '#/bin/zsh'
 			write(23,'(a)') 'rm test.trp'
-			write(23,'(a)') 'for n in {1..1}'
+			write(23,'(a)') 'for n in {1..20000}'
 			write(23,'(a)') 'do'
-				write(23,'(a)') 'echo $n " step" '
-				write(23,'(a)') 'dcvmd'
-				write(23,'(a)') 'rm test.gro'
-				write(23,'(a)') 'rm test.top'
-				write(23,'(a)') 'rm index.ndx'
-				write(23,'(a)') 'cp testout.gro test.gro'
-				write(23,'(a)') 'cp testnew.top test.top'
-				write(23,'(a)') 'cp indexnew.ndx index.ndx'
-				write(23,'(a)') 'rm test.tpr'
-				write(23,'(a)') 'rm test.cpt'
-				write(23,'(a)') 'rm test.edr'
-				write(23,'(a)') 'rm test.log'
-				write(23,'(a)') 'rm test.trr'
-				write(23,'(a)') 'rm test.xtc'
-				write(23,'(a)') 'rm test.cpt'
-				write(23,'(a)') "find -type f -name 'test.mdp' -print0 | xargs --null perl -pi -e &
+				write(23,'(a)') '  echo $n " step" '
+				write(23,'(a)') '  ./dcvmd'
+				write(23,'(a)') '  rm test.gro'
+				write(23,'(a)') '  rm test.top'
+				write(23,'(a)') '  rm index.ndx'
+				write(23,'(a)') '  cp testout.gro test.gro'
+				write(23,'(a)') '  cp testnew.top test.top'
+				write(23,'(a)') '  cp indexnew.ndx index.ndx'
+				write(23,'(a)') '  rm test.tpr'
+				write(23,'(a)') '  rm test.cpt'
+				write(23,'(a)') '  rm test.edr'
+				write(23,'(a)') '  rm test.log'
+				write(23,'(a)') '  rm test.trr'
+				write(23,'(a)') '  rm test.xtc'
+				write(23,'(a)') '  rm test.cpt'
+				write(23,'(a)') "  find -type f -name 'test.mdp' -print0 | xargs --null perl -pi -e &
 				&'s/integrator               = md/integrator               = steep/'"
-				write(23,'(a)') 'mygrompp -f test.mdp -c test.gro -n index.ndx -p test.top -o test'
-				write(23,'(a)') 'mymdrun -deffnm test -pd'
-				write(23,'(a)') 'cp test.gro test1.gro'
-				write(23,'(a)') 'rm test.tpr'
-				write(23,'(a)') 'rm test.cpt'
-				write(23,'(a)') 'rm test.edr'
-				write(23,'(a)') 'rm test.log'
-				write(23,'(a)') 'rm test.trr'
-				write(23,'(a)') 'rm test.xtc'
-				write(23,'(a)') 'rm test.cpt'
-				write(23,'(a)') 'tempprog'
-				write(23,'(a)') 'cp testnew.gro test.gro '
-				write(23,'(a)') "find -type f -name 'test.mdp' -print0 | xargs --null perl -pi -e &
+				write(23,'(a)') '  gmx grompp -f test.mdp -c test.gro -n index.ndx -p test.top -o test'
+				write(23,'(a)') '  gmx mdrun -deffnm test'
+				write(23,'(a)') '  cp test.gro test1.gro'
+				write(23,'(a)') '  rm test.tpr'
+				write(23,'(a)') '  rm test.cpt'
+				write(23,'(a)') '  rm test.edr'
+				write(23,'(a)') '  rm test.log'
+				write(23,'(a)') '  rm test.trr'
+				write(23,'(a)') '  rm test.xtc'
+				write(23,'(a)') '  rm test.cpt'
+				write(23,'(a)') '  ./tempprog'
+				write(23,'(a)') '  cp testnew.gro test.gro '
+				write(23,'(a)') "  find -type f -name 'test.mdp' -print0 | xargs --null perl -pi -e &
 				&'s/integrator               = steep/integrator               = md/'"
-				write(23,'(a)') 'mygrompp -f test.mdp -c test.gro -n index.ndx -p test.top -o test '
-				write(23,'(a)') 'mymdrun -deffnm test -pd'
-				write(23,'(a)') 'cp test.gro test2.gro '
-				write(23,'(a)') 'rm test.tpr'
-				write(23,'(a)') 'rm test.cpt'
-				write(23,'(a)') 'rm test.edr'
-				write(23,'(a)') 'rm test.log'
-				write(23,'(a)') 'rm test.trr'
-				write(23,'(a)') 'rm test.xtc'
-				write(23,'(a)') 'rm test.cpt'
-				write(23,'(a)') 'denscalc'
-				write(23,'(a)') 'rm \#*'
+				write(23,'(a)') '  gmx grompp -f test.mdp -c test.gro -n index.ndx -p test.top -o test -maxwarn 1'
+				write(23,'(a)') '  gmx mdrun -deffnm test '
+				write(23,'(a)') '  ./velcalc test.gro'
+				write(23,'(a)') '  cp test.gro test2.gro '
+				write(23,'(a)') '  rm test.tpr'
+				write(23,'(a)') '  rm test.cpt'
+				write(23,'(a)') '  rm test.edr'
+				write(23,'(a)') '  rm test.log'
+				write(23,'(a)') '  rm test.trr'
+				write(23,'(a)') '  rm test.xtc'
+				write(23,'(a)') '  rm test.cpt'
+				write(23,'(a)') '  ./denscalc'
+				write(23,'(a)') '  rm \#*'
 !				write(23,)
 			write(23,'(a)') 'done'
 		close(23)

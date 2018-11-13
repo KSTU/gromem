@@ -14,9 +14,15 @@ program tempprog
 	character(5),allocatable:: SubAtomName(:,:,:)
 	real(8),allocatable:: SubAtomX(:,:,:),SubAtomY(:,:,:),SubAtomZ(:,:,:)
 	real(8),allocatable:: SubAtomVX(:,:,:),SubAtomVY(:,:,:),SubAtomVZ(:,:,:)
+	integer(4),allocatable:: SubAtomIndex(:,:,:)
+	integer(4),allocatable:: SubAtomIndex2(:,:,:)
+
 	integer(4) MemAtom
 	real(8),allocatable:: MemX(:),MemY(:),MemZ(:)
 	character(5), allocatable:: MemName(:)
+	integer(4), allocatable:: MemIndex(:)
+	integer(4), allocatable:: MemIndex2(:)
+
 	integer(4) TempInt,TempInt1,TempInt2
 	real(8) TempR1,TempR2,TempR3
 	real(8) Sigma
@@ -88,6 +94,13 @@ program tempprog
 	character(5),allocatable:: SubMolName(:,:,:)
 	
 	integer(4) SampleNum
+
+	integer(4) WallAtom
+	integer(4),allocatable:: WallIndex(:)
+	integer(4),allocatable:: WallIndex2(:)
+	real(8),allocatable:: WallX(:)
+	real(8),allocatable:: WallY(:)
+	real(8),allocatable:: WallZ(:)
 	
 	open(7,file='test.temp')
 		read(7,'(f20.10)') BoxL1
@@ -126,7 +139,13 @@ program tempprog
 		allocate(SubAtomVX(SubNum+1,TotalMol,30))
 		allocate(SubAtomVY(SubNum+1,TotalMol,30))
 		allocate(SubAtomVZ(SubNum+1,TotalMol,30))
+
+		allocate(SubAtomIndex(SubNum+1,TotalMol,30))
+		allocate(SubAtomIndex2(SubNum+1,TotalMol,30))
+		
 		allocate(MemName(MemAtom))
+		allocate(MemIndex(MemAtom))
+		allocate(MemIndex2(MemAtom))
 		allocate(MemX(MemAtom))
 		allocate(MemY(MemAtom))
 		allocate(MemZ(MemAtom))
@@ -178,8 +197,8 @@ program tempprog
 			do j=1,NLiq(i)
 				do k=1,SubAtomNum(i)
 				print * ,i,j,k
-					read(8,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt, TempString,SubAtomName(i,j,k),&
-					&TempInt1,SubAtomX(i,j,k),SubAtomY(i,j,k),SubAtomZ(i,j,k),&
+					read(8,'(i5,2a5,i5,3f8.3,3f8.4)') SubAtomIndex2(i,j,k), TempString,SubAtomName(i,j,k),&
+					&SubAtomIndex(i,j,k), SubAtomX(i,j,k),SubAtomY(i,j,k),SubAtomZ(i,j,k),&
 					&TempR1,TempR2,TempR3
 !					print *,i,j,k, TempInt, TempString,SubAtomName(i,j,k),&
 !					&TempInt1,SubAtomX(i,j,k),SubAtomY(i,j,k),SubAtomZ(i,j,k),&
@@ -188,10 +207,26 @@ program tempprog
 			enddo
 		enddo
 		do i=1,MemAtom
-			read(8,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt,TempString,MemName(i),&
-			&TempInt1,MemX(i),MemY(i),MemZ(i),&
+			read(8,'(i5,2a5,i5,3f8.3,3f8.4)') MemIndex2(i),TempString,MemName(i),&
+			&MemIndex(i),MemX(i),MemY(i),MemZ(i),&
 			&TempR1,TempR2,TempR3
 		enddo
+		! reaad wall atoms
+		if(MemType .eq. 5) then
+			WallAtom=Mem1HW*Mem1HW*4
+			allocate(WallIndex(WallAtom))
+			allocate(WallIndex2(WallAtom))
+			allocate(WallX(WallAtom))
+			allocate(WallY(WallAtom))
+			allocate(WallZ(WallAtom))
+			do i=1,WallAtom
+				read(8,'(i5,2a5,i5,3f8.3,3f8.4)') WallIndex2(i),TempString,TempString1,&
+				&WallIndex(i),WallX(i),WallY(i),WallZ(i),&
+				&TempR1,TempR2,TempR3
+				!print *, TempInt1, TempInt1, WallX(i), WallY(i), WallZ(i)
+			enddo
+		endif
+
 	close(8)
 	print *, ' GRO FILE READ DONE '
 	allocate(MolX(SubNum+1,TotalAtom))
@@ -263,19 +298,28 @@ program tempprog
 		do i=1,SubNum
 			do j=1,NLiq(i)
 				do k=1,SubAtomNum(i)
-					write(38,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt, SubMolName(i,j,k),SubAtomName(i,j,k),&
-					&TempInt1,SubAtomX(i,j,k),SubAtomY(i,j,k),SubAtomZ(i,j,k),&
+					write(38,'(i5,2a5,i5,3f8.3,3f8.4)') SubAtomIndex2(i,j,k), SubMolName(i,j,k),SubAtomName(i,j,k),&
+					&SubAtomIndex(i,j,k),SubAtomX(i,j,k),SubAtomY(i,j,k),SubAtomZ(i,j,k),&
 					&SubAtomVX(i,j,k),SubAtomVY(i,j,k),SubAtomVZ(i,j,k)
 					TempInt=TempInt+1
 				enddo
 			enddo
 		enddo
 		do i=1,MemAtom
-			write(38,'(i5,2a5,i5,3f8.3,3f8.4)') TempInt,TempString,MemName(i),&
-			&TempInt1,MemX(i),MemY(i),MemZ(i),&
+			write(38,'(i5,2a5,i5,3f8.3,3f8.4)') MemIndex2(i),TempString,MemName(i),&
+			&MemIndex(i),MemX(i),MemY(i),MemZ(i),&
 			&TempR1,TempR2,TempR3
 			TempInt=TempInt+1
 		enddo
+		if(MemType .eq. 5) then
+			do i=1,WallAtom
+				write(38,'(i5,2a5,i5,3f8.3,3f8.4)') WallIndex(i),'WAL','W',&
+				&WallIndex(i),WallX(i),WallY(i),WallZ(i),&
+				&TempR1,TempR2,TempR3
+				TempInt=TempInt+1
+			enddo
+		endif
+		
 		write(38,'(3f20.5)') BoxH, BoxH, TotBoxLen
 	close(38)
 end program
