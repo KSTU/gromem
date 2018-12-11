@@ -222,7 +222,7 @@ program dcvmd
 		allocate(SubAtomVX(SubNum+1,TotalMol,30))
 		allocate(SubAtomVY(SubNum+1,TotalMol,30))
 		allocate(SubAtomVZ(SubNum+1,TotalMol,30))
-  allocate(MemMol(MemAtom))
+		allocate(MemMol(MemAtom))
 		allocate(MemName(MemAtom))
 		allocate(MemX(MemAtom))
 		allocate(MemY(MemAtom))

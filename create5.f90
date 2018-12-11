@@ -846,7 +846,17 @@ program mainv5
 			do i=1,SubNum
 				write(24,'(a5,i6,i6)') InitSubName(i,1), NLiq(i), InitAtom(i)
 			enddo
-			write(24,'(i6)') Mem1HW*Mem1HW*Mem1Len*2
+
+			if (MemType==1) then
+				write(24,'(i6)') Mem1HW*Mem1HW*Mem1Len*2
+			elseif (MemType==2) then
+				write(24,'(i6)') (Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1))*2
+			elseif (MemType==3) then
+				write(24,'(i6)') (Mem1HW*Mem1HW*Mem1Len+Mem1HW*Mem1HW*(Mem1Len-1)*3)*2
+			else
+				write(24,'(i6)') Mem1HW*Mem1HW*Mem1Len*2	!количество молекул мембраны
+			endif
+
 			write(24,'(f20.10)') MemLen*2+BoxLiqLen+BoxGasLen
 			write(24,'(f20.10)') 0.0	!мембрана 1 начало
 			write(24,'(f20.10)') MemLen	!мембрана 1 конец
