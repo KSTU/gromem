@@ -109,7 +109,7 @@ float** avv3;
 
 	//read test.temp check new data
 	fileId=fopen("test.temp","r");
-	for(int i=0;i<16;i++){
+	for(int i=0;i<15;i++){
 		chk=fgets(tempString,BUFFER,fileId);
 	}
 	chk=fscanf(fileId,"%d",&start);
