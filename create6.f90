@@ -113,7 +113,7 @@ subroutine WriteMem()
 		enddo
 		do i=1,2
 			do j=1,MemN
-				write(21,'(i5,2a5,i5,3f8.3,3f8.4)') MemMol(j)+2+MemMol(MemN)*(i-1), 'MEM', MemName(j),&
+				write(21,'(i5,2a5,i5,3f8.3,3f8.4)') MemMol(j)+SubNum+MemMol(MemN)*(i-1), 'MEM', MemName(j),&
 			&tempi,&
 			&MemX(j),MemY(j),MemZ(j)+float(i-1)*(MemHZ+3.0*MemHX),&
 			&0.0,0.0,0.0
